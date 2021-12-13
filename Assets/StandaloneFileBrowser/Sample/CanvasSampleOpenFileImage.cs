@@ -10,6 +10,7 @@ using SFB;
 [RequireComponent(typeof(Button))]
 public class CanvasSampleOpenFileImage : MonoBehaviour, IPointerDownHandler {
     public RawImage output;
+    public GameObject loadingMsg = null;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
@@ -35,11 +36,18 @@ public class CanvasSampleOpenFileImage : MonoBehaviour, IPointerDownHandler {
     void Start() {
         var button = GetComponent<Button>();
         button.onClick.AddListener(OnClick);
+
+        Debug.Assert(loadingMsg != null);
+        loadingMsg.SetActive(false);
     }
 
     private void OnClick() {
-        var paths = StandaloneFileBrowser.OpenFilePanel("Title", "", ".png", false);
+        var extensions = new[] {
+                new ExtensionFilter("Image Files", "png", "jpg", "jpeg" ),
+            };
+        var paths = StandaloneFileBrowser.OpenFilePanel("Title", "", extensions, false);
         if (paths.Length > 0) {
+            loadingMsg.SetActive(true);
             StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
         }
     }
@@ -49,5 +57,6 @@ public class CanvasSampleOpenFileImage : MonoBehaviour, IPointerDownHandler {
         var loader = new WWW(url);
         yield return loader;
         output.texture = loader.texture;
+        loadingMsg.SetActive(false);
     }
 }
